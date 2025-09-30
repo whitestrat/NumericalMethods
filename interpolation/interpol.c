@@ -60,30 +60,25 @@ float interpolate_L(float x, float *points, int N){
     return L_x;
 }
 
-float divided_diff(float *div_diff, float *points, int N){
+void divided_diff(float *div_diff, float *points, int N){
     float tmp[N-1];
-    int tmp_ind = 0;
+    div_diff[0] = points[N];
     for(int i = 0; i < N-1; i++){
         tmp[i] = (points[i + 1 + N] - points[i+N])/(points[i+1] - points[i]);
     }
-    div_diff[0] = tmp[0];
-    for(int i = 1; i < N; i++){    //порядок разности
-        for(int j = 0; j < N - i - 1; j++){ //перебор элементов
-            tmp[j] = (tmp[j+1] - tmp[j])/(points[i+j+1] - points[j]);
+    div_diff[1] = tmp[0];
+    for(int i = 2; i < N; i++){    //порядок разности
+        for(int j = 0; j < N - i; j++){ //перебор элементов
+            tmp[j] = (tmp[j+1] - tmp[j])/(points[i+j] - points[j]);
         }
         div_diff[i] = tmp[0];
     }
-   //for(int i = 0; i < N-1; i++){
-        //printf("%.2f ", tmp[i]);
-    //}
-    //printf("\n");
-
 }
 
-float Gorner(float x, float *a, int N){
+float Gorner_N(float x, float* p, float *a, int N){
     float tmp = a[N-1];
     for(int i = N - 2; i >= 0; i--){
-        tmp = tmp*x + a[i];
+        tmp = tmp*(x-p[i]) + a[i];
     }
     return tmp;
 }
@@ -91,12 +86,12 @@ float Gorner(float x, float *a, int N){
 float interpolate_N(float x, float *points, int N){
     float div_diff[N];
     divided_diff(div_diff, points, N);
-    return Gorner(x, div_diff, N);
+    return Gorner_N(x, points, div_diff, N);
 }
 int main(){
     int N;
     scanf("%d", &N);
-    int Nx = 20;
+    int Nx = 100;
     float a = 0;
     float b = 10;
 
@@ -113,12 +108,12 @@ int main(){
     divided_diff(diff, points, N);
     for(int i = 0; i < Nx; i++){
         inter_N[i] = origin[i];
-        inter_N[N+i] = Gorner(origin[i], diff, N);
+        inter_N[Nx+i] = Gorner_N(origin[i], points, diff, N);
     }
 
     for(int i = 0; i < Nx; i++){
         inter_L[i] = origin[i];
-        inter_N[N+i] = interpolate_L(origin[i], points, N);
+        inter_L[Nx+i] = interpolate_L(origin[i], points, N);
     }
     
     FILE *file = fopen("Chebishev.csv", "w");
